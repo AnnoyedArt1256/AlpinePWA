@@ -69,17 +69,17 @@ db.state.where("name").equals("hda").toArray().then(stuff=>{
 			});
 		}};
 		xhr.send();
-	}
-}).then(_=>{
-	textPlace.innerHTML = "Unzipping img file..."
-	db.state.where("name").equals("hda").toArray().then(stuff=>{
-		fflate.gunzip(stuff[0].data, (err, gzippedResult) => {
-			console.log(err)
-			textPlace.innerHTML = "Unzipped!"
-			v86setup(gzippedResult.buffer);
+	} else {
+		textPlace.innerHTML = "Unzipping img file..."
+		db.state.where("name").equals("hda").toArray().then(stuff=>{
+			fflate.gunzip(stuff[0].data, (err, gzippedResult) => {
+				console.log(err)
+				textPlace.innerHTML = "Unzipped!"
+				v86setup(gzippedResult.buffer);
+			});
 		});
-	});
-});
+	}
+})
 
 function upshotClear() {
 	if (upshotQueue.pop() == undefined) queue = 0;
@@ -222,7 +222,7 @@ function v86setup(img) {
 	textPlace.innerHTML = ``
     var emulator = window.emulator = new V86Starter({
         wasm_path: "lib/v86.wasm",
-        memory_size: 160 * 1024 * 1024,
+        memory_size: 144 * 1024 * 1024,
         vga_memory_size: 8 * 1024 * 1024,
 		screen_container: document.getElementById("screen_container"), 
 		disable_keyboard: false,
