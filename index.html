@@ -1,0 +1,228 @@
+<!doctype html>
+<title>Alpine Linux on PWA</title>
+
+<head>
+
+
+<link rel="apple-touch-icon" sizes="60x60" href="/apple-touch-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="apple-mobile-web-app-title" content="Alpine PWA">
+<meta name="application-name" content="Alpine PWA">
+<meta name="msapplication-TileColor" content="#2b5797">
+<meta name="theme-color" content="#002080">
+
+
+</head>
+<script src="lib/dexie.js"></script>
+<script src="lib/libv86.js"></script>
+<script src="lib/fflate_unpkg.js"></script>
+
+<button onclick="upshot()">Save Snapshot</button>
+<button onclick="loshot()">Load Snapshot</button>
+<button onclick="uplocal()">Save Snapshot File</button>
+Load Snapshot File: <input id="restore-db" type="file">
+<br>
+<div id="screen_container">
+    <div style="white-space: pre; font: 14px monospace; line-height: 14px"></div>
+    <canvas style="display: none"></canvas>
+</div>
+
+<script>
+var queue = 0;
+var upshotQueue = [];
+ 
+var db = new Dexie("linuxPWA");
+db.version(1).stores({
+	state: "++id,name,data"
+});
+
+db.state.where("name").equals("hda").toArray().then(stuff=>{
+	if (stuff.length == 0) { 
+		console.log("yes")
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", "images/alpine.gz");
+		xhr.responseType = "arraybuffer";
+		xhr.onreadystatechange = function () {
+		if (xhr.readyState === 4) {
+			const h = new Uint8Array(xhr.response);
+			db.state.add({name: "hda", data: h}).then(_=>{
+				console.log("sent!")
+			}).catch(e => {
+				alert(`Error: ${e}`);
+			});
+			db.state.add({name: "svt", data: new Uint8Array(8)}).then(_=>{
+				console.log("sent!")
+			}).catch(e => {
+				alert(`Error: ${e}`);
+			});
+		}};
+		xhr.send();
+	}
+}).then(_=>{
+	db.state.where("name").equals("hda").toArray().then(stuff=>{
+		fflate.gunzip(stuff[0].data, (err, gzippedResult) => {
+			console.log(err)
+			v86setup(gzippedResult.buffer);
+		});
+	});
+});
+
+function upshotClear() {
+	if (upshotQueue.pop() == undefined) queue = 0;
+}
+async function upshot() {
+	if (queue == 1) {
+		alert("Error: Queue not ready.\nPlease try again later.")
+		return;
+	}
+	queue = 1;
+	upshotQueue = [1,1];
+
+	let buffer = emulator.disk_images["hda"];
+	const state = await emulator.save_state();
+
+	filename = "alpine.img";
+	buffer.get_buffer(function(b) {
+		const c = new Uint8Array(b);
+		const gzipped = fflate.gzip(c, {
+  			filename: filename
+		}, (err, gzippedResult)=>{
+			db.state.where("name").equals("hda").modify({data: gzippedResult}).then(_=>{
+				console.log("sent!")
+				upshotClear();
+			}).catch(e => {
+				alert(`Error: ${e}`);
+			});
+		});
+	});
+
+	filename = "v86state.bin";
+	const d = new Uint8Array(state);
+	const gzipped = fflate.gzip(d, {
+  		filename: filename
+	}, (err, gzippedResult)=>{
+		db.state.where("name").equals("svt").modify({data: gzippedResult}).then(_=>{
+			console.log("sent!")
+			upshotClear();
+		}).catch(e => {
+			alert(`Error: ${e}`);
+		});
+	});
+}
+
+async function loshot() {
+	if (queue == 1) {
+		alert("Error: Queue not ready.\nPlease try again later.")
+		return;
+	}
+	queue = 1;
+	db.state.where("name").equals("svt").toArray().then(stuff=>{
+		fflate.gunzip(stuff[0].data, (err, gzippedResult) => {
+			console.log(err)
+			emulator.stop();
+			(async function () {
+				await emulator.restore_state(gzippedResult.buffer);
+			})();
+			queue = 0;
+			emulator.run();
+		});
+	});
+}
+
+async function uplocal() {
+	db.state.where("name").equals("hda").toArray().then(stuff=>{
+		const hda = stuff[0].data
+		db.state.where("name").equals("svt").toArray().then(stuff2=>{
+			const svt = stuff2[0].data;
+			const gzipped = fflate.zipSync({
+  				'alpine.gz': [hda, { level: 9 }],
+  				'v86state.gz': [svt, { level: 9 }],
+			});
+        	var a = document.createElement("a");
+        	a.download = "pwaDB.bin";
+        	a.href = window.URL.createObjectURL(new Blob([gzipped.buffer]));
+        	a.dataset.downloadurl = "application/octet-stream:" + a.download + ":" + a.href;
+        	a.click();
+		});
+	});
+	this.blur();
+ };
+
+document.getElementById("restore-db").onchange = async function() {
+	if (queue == 1) {
+		alert("Error: Queue not ready.\nPlease try again later.")
+		return;
+	}
+	queue = 1;
+	if (this.files.length) {
+		var filereader = new FileReader();
+		emulator.destroy();
+
+		filereader.onload = async function(e) {
+			console.log(e.target.result)
+			const d = fflate.unzipSync(new Uint8Array(e.target.result))
+			db.state.where("name").equals("hda").modify({
+				data: d["alpine.gz"]
+			}).then(_ => {
+				console.log("sent!")
+				db.state.where("name").equals("svt").modify({
+					data: d["v86state.gz"]
+				}).then(_ => {
+					console.log("sent!");
+					setTimeout(_=>{
+						db.state.where("name").equals("hda").toArray().then(stuff => {
+							fflate.gunzip(stuff[0].data, (err, gzippedResult) => {
+								console.log(err);
+								queue = 0;
+								v86setup(gzippedResult.buffer);
+							});
+						});
+					},5000);
+				}).catch(e => {
+					alert(`Error: ${e}`);
+				});
+			}).catch(e => {
+				alert(`Error: ${e}`);
+			});
+		};
+
+		filereader.readAsArrayBuffer(this.files[0]);
+
+		this.value = "";
+	}
+	this.blur();
+};
+
+function v86setup(img) {
+    var emulator = window.emulator = new V86Starter({
+        wasm_path: "lib/v86.wasm",
+        memory_size: 192 * 1024 * 1024,
+        vga_memory_size: 8 * 1024 * 1024,
+		screen_container: document.getElementById("screen_container"), 
+		disable_keyboard: false,
+		disable_mouse: false,
+        bios: { url: "bios/seabios.bin", },
+        vga_bios: { url: "bios/vgabios.bin", },
+        bzimage: { url: "images/bzImage", },
+        hda: { buffer: img },
+		network_relay_url: "wss://relay.widgetry.org/",
+        cmdline: [
+			"rw",
+			"root=/dev/sda1"
+        ].join(" "),
+        autostart: true,
+    });
+	setTimeout(_=>{
+		emulator.keyboard_send_text("\n");
+	},5000);
+}
+
+function progressCallback ({totalRows, completedRows}) {
+  console.log(`Progress: ${completedRows} of ${totalRows} rows completed`);
+}
+</script>
