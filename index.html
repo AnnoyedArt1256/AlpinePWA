@@ -22,6 +22,8 @@
 <script src="lib/libv86.js"></script>
 <script src="lib/fflate_unpkg.js"></script>
 
+<p id="info"></p>
+<br>
 <button onclick="upshot()">Save Snapshot</button>
 <button onclick="loshot()">Load Snapshot</button>
 <button onclick="uplocal()">Save Snapshot File</button>
@@ -33,6 +35,9 @@ Load Snapshot File: <input id="restore-db" type="file">
 </div>
 
 <script>
+
+var textPlace = document.getElementById("info");
+
 var queue = 0;
 var upshotQueue = [];
  
@@ -43,6 +48,7 @@ db.version(1).stores({
 
 db.state.where("name").equals("hda").toArray().then(stuff=>{
 	if (stuff.length == 0) { 
+		textPlace.innerHTML = "Downloading 0 of 1..."
 		console.log("yes")
 		var xhr = new XMLHttpRequest();
 		xhr.open("GET", "images/alpine.gz");
@@ -51,6 +57,7 @@ db.state.where("name").equals("hda").toArray().then(stuff=>{
 		if (xhr.readyState === 4) {
 			const h = new Uint8Array(xhr.response);
 			db.state.add({name: "hda", data: h}).then(_=>{
+				textPlace.innerHTML = "Downloaded 1 of 1, you can now refresh the page!"
 				console.log("sent!")
 			}).catch(e => {
 				alert(`Error: ${e}`);
@@ -64,9 +71,11 @@ db.state.where("name").equals("hda").toArray().then(stuff=>{
 		xhr.send();
 	}
 }).then(_=>{
+	textPlace.innerHTML = "Unzipping img file..."
 	db.state.where("name").equals("hda").toArray().then(stuff=>{
 		fflate.gunzip(stuff[0].data, (err, gzippedResult) => {
 			console.log(err)
+			textPlace.innerHTML = "Unzipped!"
 			v86setup(gzippedResult.buffer);
 		});
 	});
@@ -74,12 +83,15 @@ db.state.where("name").equals("hda").toArray().then(stuff=>{
 
 function upshotClear() {
 	if (upshotQueue.pop() == undefined) queue = 0;
+	textPlace.innerHTML = `${upShotQueue.length > 0?"Saving":"Saved"} ${2-upshotQueue} of 2...`
 }
+
 async function upshot() {
 	if (queue == 1) {
 		alert("Error: Queue not ready.\nPlease try again later.")
 		return;
 	}
+	textPlace.innerHTML = "Saving 0 of 2..."
 	queue = 1;
 	upshotQueue = [1,1];
 
@@ -120,6 +132,7 @@ async function loshot() {
 		alert("Error: Queue not ready.\nPlease try again later.")
 		return;
 	}
+	textPlace.innerHTML = `Loading snapshot...`
 	queue = 1;
 	db.state.where("name").equals("svt").toArray().then(stuff=>{
 		fflate.gunzip(stuff[0].data, (err, gzippedResult) => {
@@ -129,25 +142,30 @@ async function loshot() {
 				await emulator.restore_state(gzippedResult.buffer);
 			})();
 			queue = 0;
+			textPlace.innerHTML = ``
 			emulator.run();
 		});
 	});
 }
 
 async function uplocal() {
+	textPlace.innerHTML = `Loading image...`
 	db.state.where("name").equals("hda").toArray().then(stuff=>{
 		const hda = stuff[0].data
+		textPlace.innerHTML = `Loading state...`
 		db.state.where("name").equals("svt").toArray().then(stuff2=>{
 			const svt = stuff2[0].data;
 			const gzipped = fflate.zipSync({
   				'alpine.gz': [hda, { level: 9 }],
   				'v86state.gz': [svt, { level: 9 }],
 			});
+			textPlace.innerHTML = `Saving as file...`
         	var a = document.createElement("a");
         	a.download = "pwaDB.bin";
         	a.href = window.URL.createObjectURL(new Blob([gzipped.buffer]));
         	a.dataset.downloadurl = "application/octet-stream:" + a.download + ":" + a.href;
         	a.click();
+			textPlace.innerHTML = `Done!`
 		});
 	});
 	this.blur();
@@ -164,16 +182,18 @@ document.getElementById("restore-db").onchange = async function() {
 		emulator.destroy();
 
 		filereader.onload = async function(e) {
-			console.log(e.target.result)
+			textPlace.innerHTML = `Loading image...`
 			const d = fflate.unzipSync(new Uint8Array(e.target.result))
 			db.state.where("name").equals("hda").modify({
 				data: d["alpine.gz"]
 			}).then(_ => {
 				console.log("sent!")
+				textPlace.innerHTML = `Loading state...`
 				db.state.where("name").equals("svt").modify({
 					data: d["v86state.gz"]
 				}).then(_ => {
 					console.log("sent!");
+					textPlace.innerHTML = `Done!`
 					setTimeout(_=>{
 						db.state.where("name").equals("hda").toArray().then(stuff => {
 							fflate.gunzip(stuff[0].data, (err, gzippedResult) => {
@@ -199,9 +219,10 @@ document.getElementById("restore-db").onchange = async function() {
 };
 
 function v86setup(img) {
+	textPlace.innerHTML = ``
     var emulator = window.emulator = new V86Starter({
         wasm_path: "lib/v86.wasm",
-        memory_size: 192 * 1024 * 1024,
+        memory_size: 160 * 1024 * 1024,
         vga_memory_size: 8 * 1024 * 1024,
 		screen_container: document.getElementById("screen_container"), 
 		disable_keyboard: false,
