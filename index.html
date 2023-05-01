@@ -2,39 +2,33 @@
 <title>Alpine Linux on PWA</title>
 
 <head>
-
-
-<link rel="apple-touch-icon" sizes="60x60" href="/apple-touch-icon-60x60.png">
+<link rel="stylesheet" href="css/xterm.css">
+<script src="lib/xterm.js"></script>
+<!--<link rel="apple-touch-icon" sizes="60x60" href="/apple-touch-icon-60x60.png">
 <link rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon-120x120.png">
+-->
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="manifest" href="/site.webmanifest">
 <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
-<meta name="apple-mobile-web-app-title" content="Alpine PWA">
-<meta name="application-name" content="Alpine PWA">
-<meta name="msapplication-TileColor" content="#2b5797">
 <meta name="theme-color" content="#002080">
-
-
-</head>
 <script src="lib/dexie.js"></script>
 <script src="lib/libv86.js"></script>
 <script src="lib/fflate_unpkg.js"></script>
 
+</head>
+
 <p id="info"></p>
 <br>
+<button onclick="emulator.restart()">Reset</button>
 <button onclick="upshot()">Save Snapshot</button>
 <button onclick="loshot()">Load Snapshot</button>
 <button onclick="uplocal()">Save Snapshot File</button>
 Load Snapshot File: <input id="restore-db" type="file">
 <br>
-<div id="screen_container">
-    <div style="white-space: pre; font: 14px monospace; line-height: 14px"></div>
-    <canvas style="display: none"></canvas>
-</div>
+<div id="terminal"></div>
 <br>
-<textarea id="search_input" placeholder="Use me to type on the emulator!"></textarea>
 <script>
 
 var textPlace = document.getElementById("info");
@@ -225,7 +219,6 @@ function v86setup(img) {
         wasm_path: "lib/v86.wasm",
         memory_size: 144 * 1024 * 1024,
         vga_memory_size: 8 * 1024 * 1024,
-		screen_container: document.getElementById("screen_container"), 
 		disable_keyboard: false,
 		disable_mouse: false,
         bios: { url: "bios/seabios.bin", },
@@ -235,25 +228,16 @@ function v86setup(img) {
 		network_relay_url: "wss://relay.widgetry.org/",
         cmdline: [
 			"rw",
+			"console=ttyS0,115200",
 			"root=/dev/sda1"
         ].join(" "),
         autostart: true,
     });
-	setTimeout(_=>{
-		emulator.keyboard_send_text("\n");
-	},5000);
+	var term = window.term = new Terminal();
+	term.open(document.getElementById('terminal'));
+	// Wire input events from xterm.js -> ttyS0
+	term.onKey((key, evt) => emulator.serial0_send(key.key));
+	// Wire output events from ttyS0 -> xterm.js
+	emulator.add_listener("serial0-output-char", (char) => term.write(char));
 }
-
-function translate(key,keyCode) {
-  if (key == "Enter") keyCode = 10
-	if (key.length == 1 && String.fromCharCode(keyCode) != key) {
-		return key
-	} else {
-    return String.fromCharCode(keyCode)
-  }
-}
-
-document.getElementById("search_input").addEventListener("keydown", e => {
-	emulator.keyboard_send_text(translate(e.key,e.keyCode));
-});
 </script>

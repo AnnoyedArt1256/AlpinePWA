@@ -3,9 +3,19 @@
     "short_name": "Alpine PWA",
     "icons": [
         {
-            "src": "/android-chrome-96x96.png",
-            "sizes": "96x96",
-            "type": "image/png"
+            "src": "/apple-touch-icon-60x60.png",
+            "type": "image/png",
+            "sizes": "60x60"
+        },
+        {
+            "src": "/apple-touch-icon-76x76.png",
+            "type": "image/png",
+            "sizes": "76x76"
+        },
+        {
+            "src": "/apple-touch-icon-120x120.png",
+            "type": "image/png",
+            "sizes": "120x120"
         }
     ],
     "theme_color": "#002080",
