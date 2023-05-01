@@ -244,6 +244,6 @@ function v86setup(img) {
 	},5000);
 }
 document.getElementById("search_input").addEventListener("keydown", e => {
-	emulator.keyboard_send_text(String.fromCharCode(e.which));
+	emulator.keyboard_send_text(String.fromCharCode(e.keyCode));
 });
 </script>
