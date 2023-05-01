@@ -24,7 +24,6 @@
 
 <p id="info"></p>
 <br>
-<button id="btn_abc">Enable Keyboard</button>
 <button onclick="upshot()">Save Snapshot</button>
 <button onclick="loshot()">Load Snapshot</button>
 <button onclick="uplocal()">Save Snapshot File</button>
@@ -35,7 +34,7 @@ Load Snapshot File: <input id="restore-db" type="file">
     <canvas style="display: none"></canvas>
 </div>
 <br>
-<textarea id="search_input"></textarea>
+<textarea id="search_input" placeholder="Use me to type on the emulator!"></textarea>
 <script>
 
 var textPlace = document.getElementById("info");
@@ -244,26 +243,7 @@ function v86setup(img) {
 		emulator.keyboard_send_text("\n");
 	},5000);
 }
-
-function progressCallback ({totalRows, completedRows}) {
-  console.log(`Progress: ${completedRows} of ${totalRows} rows completed`);
-}
-
-  var focusTextField = function(){
-    console.log("focusElement");
-  };
-
-  var onKeypressHandler = function(){
-    console.log("* * * keypress event handler")
-    document.getElementById('search_input').blur().focus();
-  };
-
-  var onClickHandler = function() {
-    document.getElementById('btn_abc').trigger('keypress');
-  };
-
-  document.getElementById('search_input').bind('focus', focusTextField);
-  document.getElementById('btn_abc').bind('click', onClickHandler);
-  document.getElementById('btn_abc').bind('keypress', onKeypressHandler);
-
+document.getElementById("search_input").addEventListener("keydown", e => {
+	emulator.keyboard_send_text(String.fromCharCode(e.which));
+});
 </script>
