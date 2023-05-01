@@ -243,7 +243,17 @@ function v86setup(img) {
 		emulator.keyboard_send_text("\n");
 	},5000);
 }
+
+function translate(key,keyCode) {
+  if (key == "Enter") keyCode = 10
+	if (key.length == 1 && String.fromCharCode(keyCode) != key) {
+		return key
+	} else {
+    return String.fromCharCode(keyCode)
+  }
+}
+
 document.getElementById("search_input").addEventListener("keydown", e => {
-	emulator.keyboard_send_text(String.fromCharCode(e.keyCode));
+	emulator.keyboard_send_text(translate(e.key,e.keyCode));
 });
 </script>
