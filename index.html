@@ -20,7 +20,7 @@
 
 </head>
 
-<p>Alpine running in v86</p>
+<p>Alpine Linux running in v86</p>
 <p>Make sure to enter in "dhcpcd -w4" for an internet connection</p>
 <br>
 <p id="info"></p>
@@ -81,8 +81,11 @@ db.state.where("name").equals("hda").toArray().then(stuff=>{
 })
 
 function upshotClear() {
-	textPlace.innerHTML = `${upshotQueue.length} left...`;
-	if (upshotQueue.pop() == undefined) queue = 0;
+	textPlace.innerHTML = `${upshotQueue.length - 1} left...`;
+	if (upshotQueue.pop() == undefined) {
+		queue = 0;
+		textPlace.innerHTML = "";
+	}
 }
 
 async function upshot() {
@@ -90,7 +93,7 @@ async function upshot() {
 		alert("Error: Queue not ready.\nPlease try again later.")
 		return;
 	}
-	textPlace.innerHTML = "Saving 0 of 2..."
+	textPlace.innerHTML = "2 left..."
 	queue = 1;
 	upshotQueue = [1,1];
 
