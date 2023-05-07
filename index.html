@@ -2,6 +2,10 @@
 <title>Alpine Linux on PWA</title>
 
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500&display=swap" rel="stylesheet"> 
+
 <link rel="stylesheet" href="css/xterm.css">
 <script src="lib/xterm.js"></script>
 <!--<link rel="apple-touch-icon" sizes="60x60" href="/apple-touch-icon-60x60.png">
@@ -17,12 +21,41 @@
 <script src="lib/dexie.js"></script>
 <script src="lib/libv86.js"></script>
 <script src="lib/fflate_unpkg.js"></script>
+<style>
+body {font-family: 'Noto Sans JP', sans-serif; }
 
+body { background-color: #202225; color: #eeeeee; }
+
+button {
+  background-color: #36393f;
+  border: none;
+  border-radius: 10px;
+  outline: none;
+  cursor: pointer;
+  color: #eeeeee;
+  padding: 8px 10px;
+  transition: 0.25s;
+  font-size: 17px;
+  text-shadow: 2px 2px #666666;
+}
+
+button:hover {
+  background-color: #4a494f;
+}
+
+button.active {
+  background-color: #36393f;
+}
+
+a {
+  color: #5f86b7;
+  text-shadow: 0px 0px;
+}
+
+</style>
 </head>
 
-<p>Alpine Linux running in v86</p>
-<p>Make sure to enter in "dhcpcd -w4" for an internet connection</p>
-<br>
+<p>Alpine Linux running in <a href="https://copy.sh/v86">v86</a><br>Make sure to enter in "dhcpcd -w4" for an internet connection</p>
 <p id="info"></p>
 <br>
 <button onclick="emulator.restart()">Reset</button>
@@ -30,7 +63,7 @@
 <button onclick="loshot()">Load Snapshot</button>
 <button onclick="uplocal()">Save Snapshot File</button>
 Load Snapshot File: <input id="restore-db" type="file">
-<br>
+<br><br>
 <div id="terminal"></div>
 <br>
 <script>
