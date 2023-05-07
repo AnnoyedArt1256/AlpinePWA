@@ -1,23 +1,45 @@
 <!doctype html>
-<title>Alpine Linux on PWA</title>
 
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="description" content="an online emulator which runs Alpine Linux in the browser.">
+<meta name="keywords" content="alpine linux,alpine,linux,online vm,online linux,online emulator,ios,no jailbreak,no revoke">
+<title>Alpine Linux on PWA</title>
+
+<meta name="apple-mobile-web-app-title" content="Alpine PWA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="msapplication-tap-highlight" content="yes">
+<link rel="mask-icon" href="pwa/icons/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="nightmode" content="disable">
+<meta name="viewport" content="uc-fitscreen=yes"/>
+<meta name="layoutmode" content="fitscreen">
+<meta name="imagemode" content="force">
+<meta name="theme-color" content="#698aea">
+
+<link href="pwa/icons/icon-72x72.png" rel="apple-touch-icon" sizes="72x72">
+<link href="pwa/icons/icon-96x96.png" rel="apple-touch-icon" sizes="96x96">
+<link href="pwa/icons/icon-128x128.png" rel="apple-touch-icon" sizes="128x128">
+<link href="pwa/icons/icon-144x144.png" rel="apple-touch-icon" sizes="144x144">
+<link href="pwa/icons/icon-152x152.png" rel="apple-touch-icon" sizes="152x152">
+<link href="pwa/icons/icon-192x192.png" rel="apple-touch-icon" sizes="192x192">
+<link href="pwa/icons/icon-384x384.png" rel="apple-touch-icon" sizes="384x384">
+<link href="pwa/icons/icon-512x512.png" rel="apple-touch-icon" sizes="512x512">
+
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+
+<link rel="manifest" href="site.webmanifest">
+
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500&display=swap" rel="stylesheet"> 
 
 <link rel="stylesheet" href="css/xterm.css">
 <script src="lib/xterm.js"></script>
-<!--<link rel="apple-touch-icon" sizes="60x60" href="/apple-touch-icon-60x60.png">
-<link rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon-120x120.png">
--->
-<link rel="shortcut icon" href="favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-<link rel="manifest" href="site.webmanifest">
-<link rel="mask-icon" href="safari-pinned-tab.svg" color="#5bbad5">
-<meta name="theme-color" content="#002080">
+
 <script src="lib/dexie.js"></script>
 <script src="lib/libv86.js"></script>
 <script src="lib/fflate_unpkg.js"></script>
