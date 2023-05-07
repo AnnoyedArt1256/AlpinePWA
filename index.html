@@ -81,8 +81,8 @@ db.state.where("name").equals("hda").toArray().then(stuff=>{
 })
 
 function upshotClear() {
+	textPlace.innerHTML = `${upshotQueue.length} left...`;
 	if (upshotQueue.pop() == undefined) queue = 0;
-	textPlace.innerHTML = `${upShotQueue.length > 0?"Saving":"Saved"} ${2-upshotQueue} of 2...`
 }
 
 async function upshot() {
